@@ -8,53 +8,57 @@ using AspNetCoreDocker.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Newtonsoft.Json.Serialization;
 
 namespace AspNetCoreDocker
 {
     public class Startup
-    {        
+    {
         private IConfiguration _configuration;
 
 
         public Startup(IHostingEnvironment env)
         {
-              _configuration = new ConfigurationBuilder() 
-                                .SetBasePath(env.ContentRootPath)                               
-                                .AddJsonFile("appsettings.json")
-                                .AddEnvironmentVariables()
-                                .Build();
+            _configuration = new ConfigurationBuilder()
+                              .SetBasePath(env.ContentRootPath)
+                              .AddJsonFile("appsettings.json")
+                              .AddEnvironmentVariables()
+                              .Build();
         }
 
         public void ConfigureServices(IServiceCollection services)
-        {           
+        {
             var connectionString = _configuration.GetConnectionString("Default");
             services.AddDbContext<EFContext>(options => options.UseSqlite(connectionString));
 
             var key = Encoding.UTF8.GetBytes(_configuration["Auth:SecurityKey"]);
-            var expiration = Int32.Parse(_configuration["Auth:Expiration"]);       
+            var expiration = Int32.Parse(_configuration["Auth:Expiration"]);
             services.AddSingleton<JwtSettings>(new JwtSettings(new SymmetricSecurityKey(key), expiration));
 
             services.AddSingleton<AuthenticationHandler>();
             services.AddTransient<JwtSecurityTokenHandler>();
             services.AddTransient<JwtProvider>();
-         
-            services.AddMvc();            
+
+            services.AddMvc()
+                    .AddJsonOptions(options =>
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver());
         }
 
         public void Configure(IApplicationBuilder app, AuthenticationHandler handler, JwtSettings jwtSettings)
         {
-            var key = Encoding.UTF8.GetBytes("MySecurityTokenKey");          
+            var key = Encoding.UTF8.GetBytes("MySecurityTokenKey");
 
-            var validationParameters = new TokenValidationParameters{
+            var validationParameters = new TokenValidationParameters
+            {
                 IssuerSigningKey = jwtSettings.SecurityKey,
                 ValidAudience = jwtSettings.Audience,
                 ValidIssuer = jwtSettings.Issuer
-            };              
+            };
 
             var options = new JwtBearerOptions
             {
                 Events = handler,
-                TokenValidationParameters = validationParameters                                
+                TokenValidationParameters = validationParameters
             };
 
             app.UseJwtBearerAuthentication(options);

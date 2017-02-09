@@ -2,7 +2,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 using System;
 
 namespace AspNetCoreDocker.Auth

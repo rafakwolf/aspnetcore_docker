@@ -3,7 +3,6 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using AspNetCoreDocker.Models;
 using Microsoft.AspNetCore.Authorization;
 
